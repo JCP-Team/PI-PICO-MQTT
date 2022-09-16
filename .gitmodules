@@ -1,0 +1,3 @@
+[submodule "gsm_mqtt"]
+	path = gsm_mqtt
+	url = https://github.com/R00I-K0P/gsm_mqtt
