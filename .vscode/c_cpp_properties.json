@@ -8,6 +8,7 @@
         {
             "name": "PlatformIO",
             "includePath": [
+
                 "/home/hanco/Documents/PlatformIO/Projects/PI-PICO-MQTT/include",
                 "/home/hanco/Documents/PlatformIO/Projects/PI-PICO-MQTT/src",
                 "/home/hanco/Documents/PlatformIO/Projects/PI-PICO-MQTT/.pio/libdeps/pico/ArduinoJson/src",
@@ -60,11 +61,13 @@
                 "/home/hanco/.platformio/packages/framework-arduino-mbed/libraries/mbed-memory-status",
                 "/home/hanco/.platformio/packages/framework-arduino-mbed/libraries/openamp_arduino/src",
                 "/home/hanco/.platformio/packages/framework-arduino-mbed/libraries/rpclib/src",
+
                 ""
             ],
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
                 "path": [
+
                     "/home/hanco/Documents/PlatformIO/Projects/PI-PICO-MQTT/include",
                     "/home/hanco/Documents/PlatformIO/Projects/PI-PICO-MQTT/src",
                     "/home/hanco/Documents/PlatformIO/Projects/PI-PICO-MQTT/.pio/libdeps/pico/ArduinoJson/src",
@@ -117,6 +120,7 @@
                     "/home/hanco/.platformio/packages/framework-arduino-mbed/libraries/mbed-memory-status",
                     "/home/hanco/.platformio/packages/framework-arduino-mbed/libraries/openamp_arduino/src",
                     "/home/hanco/.platformio/packages/framework-arduino-mbed/libraries/rpclib/src",
+
                     ""
                 ]
             },
@@ -178,12 +182,12 @@
             ],
             "cStandard": "c11",
             "cppStandard": "c++14",
-            "compilerPath": "/home/hanco/.platformio/packages/toolchain-gccarmnoneeabi/bin/arm-none-eabi-gcc",
+            "compilerPath": "/home/zander/.platformio/packages/toolchain-gccarmnoneeabi/bin/arm-none-eabi-gcc",
             "compilerArgs": [
                 "-mcpu=cortex-m0plus",
                 "-mthumb",
-                "-iprefix/home/hanco/.platformio/packages/framework-arduino-mbed/cores/arduino",
-                "@/home/hanco/.platformio/packages/framework-arduino-mbed/variants/RASPBERRY_PI_PICO/includes.txt",
+                "-iprefix/home/zander/.platformio/packages/framework-arduino-mbed/cores/arduino",
+                "@/home/zander/.platformio/packages/framework-arduino-mbed/variants/RASPBERRY_PI_PICO/includes.txt",
                 ""
             ]
         }
