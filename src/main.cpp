@@ -3,11 +3,19 @@
 #include "config.h"
 #include "SCD30.h"
 #include "ArduinoJson.h"
-#include <Seeed_HM330X.h>
+#include <Seeed_HM330X.h>s
 
+void external_state(bool in){ //switches relay ON/OFF
+    if(in) digitalWrite(RELAY_PIN, HIGH);
+    else digitalWrite(RELAY_PIN,LOW);
+}
 
 HM330X hm330x;
 String senor_json_data(){
+    scd30.initialize();
+    if (hm330x.init()) {Serial.println("HM330X init failed");}
+    scd30.setAutoSelfCalibration(1);
+
     StaticJsonDocument<308> doc;
     //scd30 data
     float result[3] = {0};
@@ -40,16 +48,15 @@ String senor_json_data(){
     //battery data end
     String data;
     serializeJson(doc,data);
+
     return data;
 }
 
 void sensor_setup(){
     pinMode(ADC_BATTERY_PIN,INPUT);
+    pinMode(RELAY_PIN, OUTPUT);
     analogReadResolution(12);
     Wire.begin();
-    scd30.initialize();
-    if (hm330x.init()) {Serial.println("HM330X init failed");}
-    scd30.setAutoSelfCalibration(1);
 }
 
 gsm_mqtt *gsm_module;
@@ -75,12 +82,28 @@ void setup() {
     gsm_module = new gsm_mqtt(SERVER,PORT,COMMAND,mqtt_callback);
 }
 
+enum MAINSTATE(WARMUP,WAIT,SEND);
+MAINSTATE main_state = MAINSTATE::WARMUP;
 unsigned long int timerr = 0;
 void loop() {
     gsm_module->gsm_mqtt_loop();
-    if(gsm_module->timeout(timerr)){
-        timerr = gsm_module->set_time(30000);
-        gsm_module->pub(senor_json_data(),DATA);
+    switch (main_state)
+    {
+    case MAINSTATE::WARMUP:
+         if(gsm_module->timeout(timerr)){
+         main_state = MAINSTATE::SEND;
+         external_state(ON);
+         timerr = gsm_module->set_time(warmup_interval);
+         }
+        break;
+    case MAINSTATE::SEND:
+         if(gsm_module->timeout(timerr)){
+             gsm_module->pub(senor_json_data(),DATA);
+              main_state= MAINSTATE::WARMUP;
+              external_state(OFF);
+              timerr = gsm_module->set_time(reading_interval);
+         }
+        break;
     }
 } 
 
