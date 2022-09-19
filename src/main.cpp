@@ -3,7 +3,7 @@
 #include "config.h"
 #include "SCD30.h"
 #include "ArduinoJson.h"
-#include <Seeed_HM330X.h>s
+#include <Seeed_HM330X.h>
 
 void external_state(bool in){ //switches relay ON/OFF
     if(in) digitalWrite(RELAY_PIN, HIGH);
@@ -82,7 +82,7 @@ void setup() {
     gsm_module = new gsm_mqtt(SERVER,PORT,COMMAND,mqtt_callback);
 }
 
-enum MAINSTATE(WARMUP,WAIT,SEND);
+enum MAINSTATE{WARMUP,SEND};
 MAINSTATE main_state = MAINSTATE::WARMUP;
 unsigned long int timerr = 0;
 void loop() {
