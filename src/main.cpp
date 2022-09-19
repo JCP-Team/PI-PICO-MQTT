@@ -8,7 +8,7 @@
 
 HM330X hm330x;
 String senor_json_data(){
-    StaticJsonDocument<300> doc;
+    StaticJsonDocument<308> doc;
     //scd30 data
     float result[3] = {0};
     if (scd30.isAvailable()) {
