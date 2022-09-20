@@ -1,11 +1,13 @@
 #include <Arduino.h>
 #include "gsm_mqtt.h"
 #include "config.h"
+//sensors
 #include "SCD30.h"
 #include "ArduinoJson.h"
 #include <Seeed_HM330X.h>
-
-void external_state(bool in){ //switches relay ON/OFF
+#include <Multichannel_Gas_GMXXX.h>
+gsm_mqtt *gsm_module;
+GAS_GMXXX<TwoWire> gas;void external_state(bool in){ //switches relay ON/OFF
     if(in) digitalWrite(RELAY_PIN, HIGH);
     else digitalWrite(RELAY_PIN,LOW);
 }
@@ -41,10 +43,7 @@ String senor_json_data(){
     //hm330x data end
 
     //battery data begin
-    batt_v = (analogRead(ADC_BATTERY_PIN) * (3.31/4095))*((560.0+156.0)/560.0);
-    err = (1/12) * batt_v + 0.065; //error function, determined.
-    batt_v += err;
-    doc["battery_voltage"] = batt_v;
+    doc["battery_voltage"] = gsm_module->batt_voltage;
     //battery data end
     String data;
     serializeJson(doc,data);
@@ -57,9 +56,13 @@ void sensor_setup(){
     pinMode(RELAY_PIN, OUTPUT);
     analogReadResolution(12);
     Wire.begin();
+    scd30.initialize();
+    if (hm330x.init()) {Serial.println("HM330X init failed");}
+    scd30.setAutoSelfCalibration(1);
+    gas.begin(Wire, 0x08);
 }
 
-gsm_mqtt *gsm_module;
+
 void mqtt_callback(String topic, String message){
     // Serial.println(topic);
     // Serial.println(message);
@@ -79,13 +82,31 @@ void mqtt_callback(String topic, String message){
 void setup() {
     Serial.begin(115200);
     sensor_setup();
-    gsm_module = new gsm_mqtt(SERVER,PORT,COMMAND,mqtt_callback);
+    gsm_module = new gsm_mqtt("test.mosquitto.org",PORT,COMMAND,mqtt_callback);
 }
 
 enum MAINSTATE{WARMUP,SEND};
 MAINSTATE main_state = MAINSTATE::WARMUP;
 unsigned long int timerr = 0;
 void loop() {
+    // switch(main_state){
+    //     case MAINSTATE::SEND:{
+    //         if(gsm_module->timeout(timerr)){
+    //             //send data
+    //             //turn off relay
+    //             timerr = gsm_module->set_time(SEND_DELAY);
+    //             main_state = MAINSTATE::WARMPUP;
+    //         }
+    //         break;
+    //     }
+    //     case MAINSTATE::WARMPUP:{
+    //         if(gsm_module->timeout(timerr)){
+    //             timerr = gsm_module->set_time(WARMUP_TIME);
+    //             //turn relay on
+    //             main_state = MAINSTATE::SEND
+    //         }
+    //     }
+    // }
     gsm_module->gsm_mqtt_loop();
     switch (main_state)
     {
