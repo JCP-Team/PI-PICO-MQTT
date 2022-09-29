@@ -5,7 +5,7 @@
 #define ON true
 #define OFF false
 
-int reading_interval = 30000;
+int idle_interval = 30000;
 int warmup_interval = 2*1000*60;
 const String SERVER = "test.mosquitto.org";
 const String PORT = "1883";
@@ -15,4 +15,5 @@ const String APP_VERSION = "ccfccnadblapdp7slkg0-v1";
 
 const String DATA = "00001/data";//"kp1/" + APP_VERSION + "/dcx/" + TOKEN + "/json";
 const String COMMAND = "00001/command";//"NULL";// "kp1/" + APP_VERSION + "/cex/" + TOKEN + "/command/zero/status";
+const String RESPONSE = "00001/response";
 // const String RESULT = "kp1/" + APP_VERSION + "/cex/" + TOKEN + "/result/zero";

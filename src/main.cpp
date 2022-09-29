@@ -7,16 +7,15 @@
 #include <Seeed_HM330X.h>
 #include <Multichannel_Gas_GMXXX.h>
 gsm_mqtt *gsm_module;
-GAS_GMXXX<TwoWire> gas;void external_state(bool in){ //switches relay ON/OFF
+GAS_GMXXX<TwoWire> gas;
+void external_state(bool in){ //switches relay ON/OFF
     if(in) digitalWrite(RELAY_PIN, HIGH);
     else digitalWrite(RELAY_PIN,LOW);
 }
 
 HM330X hm330x;
 String senor_json_data(){
-    scd30.initialize();
-    if (hm330x.init()) {Serial.println("HM330X init failed");}
-    scd30.setAutoSelfCalibration(1);
+
 
     StaticJsonDocument<308> doc;
     //scd30 data
@@ -60,71 +59,55 @@ void sensor_setup(){
     if (hm330x.init()) {Serial.println("HM330X init failed");}
     scd30.setAutoSelfCalibration(1);
     gas.begin(Wire, 0x08);
+    
 }
 
 
 void mqtt_callback(String topic, String message){
-    // Serial.println(topic);
-    // Serial.println(message);
-    // StaticJsonDocument<150> doc;
-    // deserializeJson(doc,message);
-    // StaticJsonDocument<150> response;
-    // response["id"] = doc[0]["id"];
-    // response["statusCode"] = 200;
-    // response["reasonPhase"] = "OK";
-    // response["payload"] = "Success";
-    // String data;
-    // serializeJson(response,data);
-    // data = "["+data+"]";
-    // gsm_module->pub(data,RESULT);
+    StaticJsonDocument<150> doc;
+    StaticJsonDocument<150> response;
+    deserializeJson(doc,message);
+    if(doc["idle_interval"].is<int>()){
+        idle_interval = doc["idle_interval"];
+        
+        response["idle_interval"] = idle_interval;
+        response["Status"] = "OK";
+    }
+    String data;
+    serializeJson(response,data);
+    gsm_module->pub(data,RESPONSE);
 }
 
 void setup() {
     Serial.begin(115200);
     sensor_setup();
-    gsm_module = new gsm_mqtt("test.mosquitto.org",PORT,COMMAND,mqtt_callback);
+    gsm_module = new gsm_mqtt(SERVER,PORT,COMMAND,mqtt_callback);
 }
 
-enum MAINSTATE{WARMUP,SEND};
+enum MAINSTATE{IDLE,WARMUP,SEND};
 MAINSTATE main_state = MAINSTATE::WARMUP;
 unsigned long int timerr = 0;
 void loop() {
-    // switch(main_state){
-    //     case MAINSTATE::SEND:{
-    //         if(gsm_module->timeout(timerr)){
-    //             //send data
-    //             //turn off relay
-    //             timerr = gsm_module->set_time(SEND_DELAY);
-    //             main_state = MAINSTATE::WARMPUP;
-    //         }
-    //         break;
-    //     }
-    //     case MAINSTATE::WARMPUP:{
-    //         if(gsm_module->timeout(timerr)){
-    //             timerr = gsm_module->set_time(WARMUP_TIME);
-    //             //turn relay on
-    //             main_state = MAINSTATE::SEND
-    //         }
-    //     }
-    // }
     gsm_module->gsm_mqtt_loop();
     switch (main_state)
     {
-    case MAINSTATE::WARMUP:
-         if(gsm_module->timeout(timerr)){
-         main_state = MAINSTATE::SEND;
-         external_state(ON);
-         timerr = gsm_module->set_time(warmup_interval);
-         }
-        break;
-    case MAINSTATE::SEND:
-         if(gsm_module->timeout(timerr)){
-             gsm_module->pub(senor_json_data(),DATA);
-              main_state= MAINSTATE::WARMUP;
-              external_state(OFF);
-              timerr = gsm_module->set_time(reading_interval);
-         }
-        break;
+        case MAINSTATE::WARMUP:{
+            if(gsm_module->timeout(timerr)){
+                main_state = MAINSTATE::SEND;
+                external_state(ON);
+                timerr = gsm_module->set_time(warmup_interval);
+            }
+            break;
+        }
+        case MAINSTATE::SEND:{
+            if(gsm_module->timeout(timerr)){
+                gsm_module->pub(senor_json_data(),DATA);
+                main_state= MAINSTATE::WARMUP;
+                external_state(OFF);
+                timerr = gsm_module->set_time(idle_interval);
+            }
+            break;
+        }
     }
 } 
 
