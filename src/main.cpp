@@ -15,8 +15,6 @@ void external_state(bool in){ //switches relay ON/OFF
 
 HM330X hm330x;
 String senor_json_data(){
-
-
     StaticJsonDocument<308> doc;
     //scd30 data
     float result[3] = {0};
@@ -58,8 +56,7 @@ void sensor_setup(){
     scd30.initialize();
     if (hm330x.init()) {Serial.println("HM330X init failed");}
     scd30.setAutoSelfCalibration(1);
-    gas.begin(Wire, 0x08);
-    
+    gas.begin(Wire, 0x08); 
 }
 
 
