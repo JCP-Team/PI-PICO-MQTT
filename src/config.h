@@ -20,3 +20,14 @@ const String COMMAND = SENSOR_ID + "/command"; //"NULL";// "kp1/" + APP_VERSION 
 
 float_t batt_v = 0;
 float_t err = 0;
+float massConcentrationPm1p0;
+float massConcentrationPm2p5;
+float massConcentrationPm4p0;
+float massConcentrationPm10p0;
+float ambientHumidity;
+float ambientTemperature;
+float vocIndex;
+float noxIndex;
+
+uint16_t error;
+char errorMessage[256];
