@@ -4,19 +4,20 @@
 #include "SCD30.h"
 #include "ArduinoJson.h"
 #include <Seeed_HM330X.h>
+#include <SensirionI2CSen5x.h>
 
+SensirionI2CSen5x sen55;
 void external_state(bool in){ //switches relay ON/OFF
     if(in) digitalWrite(RELAY_PIN, HIGH);
     else digitalWrite(RELAY_PIN,LOW);
 }
 
-HM330X hm330x;
+
 String senor_json_data(){
     scd30.initialize();
-    if (hm330x.init()) {Serial.println("HM330X init failed");}
     scd30.setAutoSelfCalibration(1);
 
-    StaticJsonDocument<308> doc;
+    StaticJsonDocument<436> doc; //300+8+128
     //scd30 data
     float result[3] = {0};
     if (scd30.isAvailable()) {
@@ -26,26 +27,45 @@ String senor_json_data(){
         doc["Humidity"] = result[2];   
     }
     //scd30 data end
-    //hm330x data begin
-    uint8_t buf[30];
-    if (hm330x.read_sensor_value(buf, 29)) {
-        Serial.println("HM330X read result failed");
-        return "";
-    }
-    if (NULL == buf) {
-        return "";
-    }
-    doc["PM1_0"] = (uint16_t) buf[2 * 2] << 8 | buf[2 * 2 + 1];
-    doc["PM2_5"] = (uint16_t) buf[3 * 2] << 8 | buf[3 * 2 + 1];
-    doc["PM10"] = (uint16_t) buf[4 * 2] << 8 | buf[4 * 2 + 1];
-    //hm330x data end
+    //SEN55 data start
+    error = sen55.readMeasuredValues(
+        massConcentrationPm1p0, massConcentrationPm2p5, massConcentrationPm4p0,
+        massConcentrationPm10p0, ambientHumidity, ambientTemperature, vocIndex,
+        noxIndex);
 
-    //battery data begin
-    batt_v = (analogRead(ADC_BATTERY_PIN) * (3.31/4095))*((560.0+156.0)/560.0);
-    err = (1/12) * batt_v + 0.065; //error function, determined.
-    batt_v += err;
-    doc["battery_voltage"] = batt_v;
-    //battery data end
+    if (error) {
+        Serial.print("Error trying to execute readMeasuredValues(): ");
+        errorToString(error, errorMessage, 256);
+        Serial.println(errorMessage);
+    } else {
+        doc["MassConcentrationPm1p0"]=massConcentrationPm1p0;
+        doc["MassConcentrationPm2p5"]=massConcentrationPm2p5;
+        doc["MassConcentrationPm4p0"]=massConcentrationPm4p0;
+        doc["MassConcentrationPm10p0"]=massConcentrationPm10p0;
+        if (isnan(ambientHumidity)) {
+            doc["AmbientHumidity"]="n/a";
+        } else {
+            doc["AmbientHumidity"]=(ambientHumidity);
+        }
+        if (isnan(ambientTemperature)) {
+            doc["AmbientTemperature"]="n/a";
+        } else {
+            doc["AmbientTemperature"]=ambientTemperature;
+        }
+        if (isnan(vocIndex)) {
+            doc["VocIndex"]="n/a";
+        } else {
+            doc["VocIndex"]=vocIndex;
+        }
+        if (isnan(noxIndex)) {
+            doc["NoxIndex"]="n/a";
+        } else {
+            doc["NoxIndex"]=noxIndex;
+        }
+    }
+    
+    //SEN55 data end
+    
     String data;
     serializeJson(doc,data);
 
@@ -53,10 +73,21 @@ String senor_json_data(){
 }
 
 void sensor_setup(){
-    pinMode(ADC_BATTERY_PIN,INPUT);
     pinMode(RELAY_PIN, OUTPUT);
-    analogReadResolution(12);
     Wire.begin();
+    sen55.begin(Wire);
+    error = sen55.deviceReset();
+    if (error) {
+        Serial.print("Error trying to execute deviceReset(): ");
+        errorToString(error, errorMessage, 256);
+        Serial.println(errorMessage);
+    }
+    error = sen55.startMeasurement();
+    if (error) {
+        Serial.print("Error executing startMeasurement(): ");
+        errorToString(error, errorMessage, 256);
+        Serial.println(errorMessage);
+    }
 }
 
 gsm_mqtt *gsm_module;
