@@ -27,14 +27,14 @@ String senor_json_data(){
     }
     //scd30 data end
     //SEN55 data start
-    error = sen55.readMeasuredValues(
+    error_b = sen55.readMeasuredValues(
         massConcentrationPm1p0, massConcentrationPm2p5, massConcentrationPm4p0,
         massConcentrationPm10p0, ambientHumidity, ambientTemperature, vocIndex,
         noxIndex);
 
-    if (error) {
-        Serial.print("Error trying to execute readMeasuredValues(): ");
-        errorToString(error, errorMessage, 256);
+    if (error_b) {
+        Serial.print("error_b trying to execute readMeasuredValues(): ");
+        errorToString(error_b, errorMessage, 256);
         Serial.println(errorMessage);
     } else {
         doc["MassConcentrationPm1p0"]=massConcentrationPm1p0;
@@ -75,16 +75,16 @@ void sensor_setup(){
     pinMode(RELAY_PIN, OUTPUT);
     Wire.begin();
     sen55.begin(Wire);
-    error = sen55.deviceReset();
-    if (error) {
+    error_b = sen55.deviceReset();
+    if (error_b) {
         Serial.print("Error trying to execute deviceReset(): ");
-        errorToString(error, errorMessage, 256);
+        errorToString(error_b, errorMessage, 256);
         Serial.println(errorMessage);
     }
-    error = sen55.startMeasurement();
-    if (error) {
+    error_b = sen55.startMeasurement();
+    if (error_b) {
         Serial.print("Error executing startMeasurement(): ");
-        errorToString(error, errorMessage, 256);
+        errorToString(error_b, errorMessage, 256);
         Serial.println(errorMessage);
     }
 }

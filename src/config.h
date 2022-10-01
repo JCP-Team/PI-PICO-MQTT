@@ -29,5 +29,5 @@ float ambientTemperature;
 float vocIndex;
 float noxIndex;
 
-uint16_t error;
+uint16_t error_b;
 char errorMessage[256];
