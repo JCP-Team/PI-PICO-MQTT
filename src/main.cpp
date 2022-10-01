@@ -3,7 +3,6 @@
 #include "config.h"
 #include "SCD30.h"
 #include "ArduinoJson.h"
-#include <Seeed_HM330X.h>
 #include <SensirionI2CSen5x.h>
 
 SensirionI2CSen5x sen55;
